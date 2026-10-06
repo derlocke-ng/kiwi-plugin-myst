@@ -61,6 +61,10 @@ class MysteriumProvider(TunnelProvider):
             cap_drop=["all"],
             cap_add=["NET_ADMIN"],
             security_opt=["no-new-privileges"],
+            # Container-root, so the node can configure the tun device — and so the
+            # adapter (keep-id) joining this netns matches the proven kiwi-fox
+            # gateway(None)+browser(keep-id) namespace pairing.
+            userns=None,
             tmpfs=["/tmp"],
             labels={"kiwi-fox.module": self.name, "kiwi-fox.role": "tunnel"},
         )

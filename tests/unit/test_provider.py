@@ -46,3 +46,7 @@ def test_adapter_rides_the_node_netns(provider, ctx):
 def test_container_names(ctx):
     assert ctx.container_name() == paths.provider_container_name("mysterium")
     assert ctx.adapter_name("x") == paths.provider_container_name("mysterium-adapter", "x")
+
+
+def test_tunnel_runs_as_container_root_for_the_tun_device(provider, ctx):
+    assert provider.tunnel_spec(ctx, lease="0xp").userns is None
