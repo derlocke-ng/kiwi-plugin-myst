@@ -14,6 +14,7 @@ TAGS=kiwi-fox provider mysterium myst dvpn socks5 proxy podman
 
 SCOPES=user
 
+ICON=data/kiwi-plugin.svg
 ABOUT=README.md
 
 # Checked with `command -v` before installing. The provider image is built or
