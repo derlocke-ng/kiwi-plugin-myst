@@ -1,0 +1,11 @@
+# kiwi-fox mysterium provider — the SOCKS5 adapter sidecar.
+# A tiny microsocks that runs in the myst node's network namespace, so its SOCKS5
+# rides the Mysterium tunnel while being reachable on the providers bridge at the
+# node's address. Built by `kiwi-fox module setup mysterium` as
+# kiwi-fox/mysterium-adapter:latest.
+FROM docker.io/library/alpine:3.20
+
+RUN apk add --no-cache microsocks
+
+# The listen port is passed as the single argument (kiwi-fox passes socks_port).
+ENTRYPOINT ["sh", "-c", "exec microsocks -i 0.0.0.0 -p \"${1:-1080}\"", "microsocks"]

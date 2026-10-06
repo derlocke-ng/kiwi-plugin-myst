@@ -1,0 +1,11 @@
+# kiwi-fox mysterium provider — the node (tunnel) image.
+# FROM the official Mysterium node so the client and its dependencies are present;
+# a thin entrypoint starts the node and brings a consumer connection up.
+# Built by `kiwi-fox module setup mysterium` as kiwi-fox/mysterium:latest.
+FROM docker.io/mysterium/myst:latest
+
+COPY entrypoint.sh /usr/local/bin/kf-myst
+# busybox/wget is present in the base image; make the entrypoint executable.
+RUN chmod +x /usr/local/bin/kf-myst
+
+ENTRYPOINT ["/usr/local/bin/kf-myst"]
