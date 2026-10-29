@@ -1,9 +1,9 @@
-"""The mysterium provider against the real kiwi-fox contract."""
+"""The mysterium provider against the real kiwi-proxy contract."""
 
 from __future__ import annotations
 
-from kiwi_fox.core import paths, podman
-from kiwi_fox.core.providers.base import Provider, TunnelProvider
+from kiwi_proxy import paths, podman
+from kiwi_proxy.providers.base import Provider, TunnelProvider
 
 
 def test_manifest(manifest):
@@ -21,13 +21,13 @@ def test_provider_is_a_tunnel_provider(provider):
 
 
 def test_image_is_the_locally_built_name(ctx):
-    assert ctx.image == "kiwi-fox/mysterium:latest"
+    assert ctx.image == "kiwi-proxy/mysterium:latest"
 
 
 def test_tunnel_spec_mounts_identity_and_has_tun(provider, ctx):
     spec = provider.tunnel_spec(ctx, lease="0xprovider")
     assert spec.network == "kf-providers"
-    assert spec.image == "kiwi-fox/mysterium:latest"
+    assert spec.image == "kiwi-proxy/mysterium:latest"
     assert "/dev/net/tun" in spec.devices
     assert spec.cap_add == ["NET_ADMIN"]
     assert spec.env["KF_MYST_PROVIDER"] == "0xprovider"
@@ -38,7 +38,7 @@ def test_adapter_rides_the_node_netns(provider, ctx):
     tunnel = ctx.container_name("x")
     adapter = provider.adapter_spec(ctx, tunnel, lease="x")
     assert adapter.network == f"container:{tunnel}"
-    assert adapter.image == "kiwi-fox/mysterium-adapter:latest"
+    assert adapter.image == "kiwi-proxy/mysterium-adapter:latest"
     assert adapter.args == ["1080"]
     assert "--privileged" not in podman.spec_args(adapter)
 

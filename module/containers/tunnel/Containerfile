@@ -1,7 +1,7 @@
-# kiwi-fox mysterium provider — the node (tunnel) image.
+# kiwi-proxy mysterium provider — the node (tunnel) image.
 # FROM the official Mysterium node so the client and its dependencies are present;
 # a thin entrypoint starts the node and brings a consumer connection up.
-# Built by `kiwi-fox module setup mysterium` as kiwi-fox/mysterium:latest.
+# Built by `kiwi-proxy module setup mysterium` as kiwi-proxy/mysterium:latest.
 FROM docker.io/mysterium/myst:latest
 
 COPY entrypoint.sh /usr/local/bin/kf-myst

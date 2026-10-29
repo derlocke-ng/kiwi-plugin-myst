@@ -17,19 +17,19 @@ the node's local API and logs clearly if it needs attention — see the README.
 
 from __future__ import annotations
 
-from kiwi_fox.core.models import ContainerSpec, ProviderManifest
-from kiwi_fox.core.providers.base import ProviderError, TunnelProvider
+from kiwi_proxy.models import ContainerSpec, ProviderManifest
+from kiwi_proxy.providers.base import ProviderError, TunnelProvider
 
 SOCKS_PORT = 1080
 # Built locally FROM mysterium/myst (the entrypoint starts the node and connects),
-# so the manifest names no pullable image: ctx.image becomes kiwi-fox/mysterium:latest.
+# so the manifest names no pullable image: ctx.image becomes kiwi-proxy/mysterium:latest.
 MYST_DATA = "/var/lib/mysterium-node"
 
 MANIFEST = ProviderManifest(
     name="mysterium",
     title="Mysterium",
     description="exit through the Mysterium dVPN",
-    version="0.1.0",
+    version="0.2.0",
     image=None,
     socks_port=SOCKS_PORT,
     auth="none",
@@ -53,7 +53,7 @@ class MysteriumProvider(TunnelProvider):
         data.mkdir(parents=True, exist_ok=True)
         return ContainerSpec(
             name=ctx.container_name(lease),
-            image=ctx.image,  # kiwi-fox/mysterium:latest, built by setup()
+            image=ctx.image,  # kiwi-proxy/mysterium:latest, built by setup()
             network=ctx.network,
             env=env,
             volumes=[(str(data), MYST_DATA, "rw,z")],  # identity / keystore persists here
@@ -62,15 +62,15 @@ class MysteriumProvider(TunnelProvider):
             cap_add=["NET_ADMIN"],
             security_opt=["no-new-privileges"],
             # Container-root, so the node can configure the tun device — and so the
-            # adapter (keep-id) joining this netns matches the proven kiwi-fox
+            # adapter (keep-id) joining this netns matches the proven kiwi-proxy
             # gateway(None)+browser(keep-id) namespace pairing.
             userns=None,
             tmpfs=["/tmp"],
-            labels={"kiwi-fox.module": self.name, "kiwi-fox.role": "tunnel"},
+            labels={"kiwi-proxy.module": self.name, "kiwi-proxy.role": "tunnel"},
         )
 
     def tunnel_ready(self, ctx, container):
-        from kiwi_fox.core import podman
+        from kiwi_proxy import podman
 
         logs = podman.logs(container, tail=200).lower()
         return "connection established" in logs or "status: connected" in logs
@@ -78,9 +78,9 @@ class MysteriumProvider(TunnelProvider):
     def setup(self, ctx):
         # Both images are built locally: the node (FROM mysterium/myst, with a
         # consumer-connect entrypoint) and the microsocks adapter.
-        from kiwi_fox.core import podman
+        from kiwi_proxy import podman
 
-        labels = {"app": "kiwi-fox", "kiwi-fox.module": self.name}
+        labels = {"app": "kiwi-proxy", "kiwi-proxy.module": self.name}
         tunnel_cf = ctx.containerfile("tunnel")
         if not tunnel_cf.exists():
             raise ProviderError(f"{self.name}: no tunnel Containerfile at {tunnel_cf}")

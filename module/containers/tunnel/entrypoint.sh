@@ -1,5 +1,5 @@
 #!/bin/sh
-# kiwi-fox mysterium provider — start the Mysterium node and bring a consumer
+# kiwi-proxy mysterium provider — start the Mysterium node and bring a consumer
 # connection up, so a microsocks adapter in this netns can route over it.
 #
 # The node exposes a local HTTP API (tequilapi) on 127.0.0.1:4050. The consumer
