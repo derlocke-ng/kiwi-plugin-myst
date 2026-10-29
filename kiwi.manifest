@@ -1,7 +1,7 @@
 # kiwi.manifest — app metadata for kiwi-updater
 NAME=kiwi-plugin-myst
 DESCRIPTION=exit through the Mysterium dVPN — a kiwi-proxy provider module
-VERSION=0.2.0
+VERSION=0.2.1
 AUTHOR=derlocke-ng
 HOMEPAGE=https://github.com/derlocke-ng/kiwi-plugin-myst
 LICENSE=GPL-3.0-or-later

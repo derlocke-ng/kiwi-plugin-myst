@@ -7,7 +7,7 @@ SOCKS5 that rides the tunnel and is reachable on the bridge at the node's addres
 
 Mysterium needs a registered consumer identity (free to create; connecting spends a
 small balance). The identity/keystore is kept in the module's state directory and
-mounted into the node, so it persists across launches and is not per profile.
+mounted into the node, so it persists across launches and is not per exit.
 
 A `--lease` is a provider identity (0x…) to connect to; omit it to let the node pick
 from the discovery service. Because the exact consumer-connect flow depends on your
@@ -29,7 +29,7 @@ MANIFEST = ProviderManifest(
     name="mysterium",
     title="Mysterium",
     description="exit through the Mysterium dVPN",
-    version="0.2.0",
+    version="0.2.1",
     image=None,
     socks_port=SOCKS_PORT,
     auth="none",

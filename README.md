@@ -62,7 +62,7 @@ microsocks adapter  (SOCKS5 0.0.0.0:1080, rides the tunnel)
 ```
 
 The adapter is removed before the node on teardown. A shared node serves every
-profile on the same lease and is torn down once no running gateway still uses it.
+exit on the same lease and is torn down once no running gateway still uses it.
 
 ## Status
 
