@@ -6,6 +6,14 @@ latest tag matching `^v?[0-9]+(\.[0-9]+){0,3}$`.
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-11-07
+
+### Fixed
+- The adapter image did not build either: the same `apk add microsocks` as
+  kiwi-plugin-vpn's adapter, and microsocks is in no stable Alpine repository.
+  Built from its v1.0.5 release tag in a builder stage, as kiwi-plugin-vpn 0.2.2
+  does. 0.2.2 fixed the node image and missed this one.
+
 ## [0.2.2] - 2026-11-07
 
 ### Fixed
