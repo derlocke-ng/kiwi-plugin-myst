@@ -20,7 +20,7 @@ kiwi install kiwi-plugin-myst
 kiwi-proxy module setup mysterium    # builds kiwi-proxy/mysterium:latest and the adapter
 ```
 
-Both images are built locally: the node image is `FROM mysterium/myst` with a thin
+Both images are built locally: the node image is `FROM mysteriumnetwork/myst` with a thin
 entrypoint that starts the node and brings a consumer connection up; the adapter is
 `alpine + microsocks`.
 

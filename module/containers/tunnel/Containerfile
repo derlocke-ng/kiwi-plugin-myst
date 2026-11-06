@@ -2,7 +2,7 @@
 # FROM the official Mysterium node so the client and its dependencies are present;
 # a thin entrypoint starts the node and brings a consumer connection up.
 # Built by `kiwi-proxy module setup mysterium` as kiwi-proxy/mysterium:latest.
-FROM docker.io/mysterium/myst:latest
+FROM docker.io/mysteriumnetwork/myst:latest
 
 COPY entrypoint.sh /usr/local/bin/kf-myst
 # busybox/wget is present in the base image; make the entrypoint executable.

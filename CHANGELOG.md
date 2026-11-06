@@ -6,6 +6,14 @@ latest tag matching `^v?[0-9]+(\.[0-9]+){0,3}$`.
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-11-07
+
+### Fixed
+- The node image did not build: it was `FROM docker.io/mysterium/myst`, which does
+  not exist on Docker Hub. The official image is `mysteriumnetwork/myst`; it has
+  `myst` and busybox `wget`, which the entrypoint uses. Nothing in CI builds the
+  module's images, so this is the first time it was built.
+
 ## [0.2.1] - 2026-10-29
 
 ### Changed

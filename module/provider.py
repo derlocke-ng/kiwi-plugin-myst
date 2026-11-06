@@ -21,7 +21,7 @@ from kiwi_proxy.models import ContainerSpec, ProviderManifest
 from kiwi_proxy.providers.base import ProviderError, TunnelProvider
 
 SOCKS_PORT = 1080
-# Built locally FROM mysterium/myst (the entrypoint starts the node and connects),
+# Built locally FROM mysteriumnetwork/myst (the entrypoint starts the node and connects),
 # so the manifest names no pullable image: ctx.image becomes kiwi-proxy/mysterium:latest.
 MYST_DATA = "/var/lib/mysterium-node"
 
@@ -29,7 +29,7 @@ MANIFEST = ProviderManifest(
     name="mysterium",
     title="Mysterium",
     description="exit through the Mysterium dVPN",
-    version="0.2.1",
+    version="0.2.2",
     image=None,
     socks_port=SOCKS_PORT,
     auth="none",
@@ -76,7 +76,7 @@ class MysteriumProvider(TunnelProvider):
         return "connection established" in logs or "status: connected" in logs
 
     def setup(self, ctx):
-        # Both images are built locally: the node (FROM mysterium/myst, with a
+        # Both images are built locally: the node (FROM mysteriumnetwork/myst, with a
         # consumer-connect entrypoint) and the microsocks adapter.
         from kiwi_proxy import podman
 
