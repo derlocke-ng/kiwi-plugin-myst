@@ -25,7 +25,9 @@ echo "== build $TUNNEL (the node)"
 podman build "$@" -t "$TUNNEL" -f module/containers/tunnel/Containerfile module/containers/tunnel
 
 echo "== myst is in the node image and runs; the entrypoint is executable, parses, and has wget"
-podman run --rm --entrypoint myst "$TUNNEL" version | head -2
+# The pipe runs in the container: `head` on podman's own output gives podman a
+# SIGPIPE once it exits, which pipefail reports as a failure (exit 141).
+podman run --rm --entrypoint sh "$TUNNEL" -c 'myst version | head -2'
 podman run --rm --entrypoint sh "$TUNNEL" -c \
     'test -x /usr/local/bin/kf-myst && sh -n /usr/local/bin/kf-myst && command -v wget >/dev/null' \
     || fail "the node image lacks the entrypoint or wget"
