@@ -64,7 +64,7 @@ MANIFEST = ProviderManifest(
     name="mysterium",
     title="Mysterium",
     description="exit through the Mysterium dVPN",
-    version="0.5.1",
+    version="0.5.2",
     image=None,
     socks_port=SOCKS_PORT,
     auth="none",
@@ -99,6 +99,7 @@ def _fetch_json(url: str, timeout: float = 20) -> object:
 
 class MysteriumProvider(TunnelProvider):
     manifest = MANIFEST
+    lease_noun = "node"  # a lease is a Mysterium node: its id is an 0x… address
     ready_timeout = 360.0  # entrypoint worst case: 4 providers × (connect ≤45s + traffic ≤25s)
     log_marker = "kf-myst:"  # kiwi-proxy quotes these lines, not the node's debug noise
 
@@ -157,7 +158,8 @@ class MysteriumProvider(TunnelProvider):
         if not id_file.exists():
             return None
         identity = id_file.read_text().strip()
-        return f"identity {identity[:8]}…{identity[-4:]}" if identity else None
+        # In full: the app offers to copy it, and the wallet is looked up by it.
+        return f"identity {identity}" if identity else None
 
     # ------------------------------------------------------------------ providers
     def countries(self, ctx):

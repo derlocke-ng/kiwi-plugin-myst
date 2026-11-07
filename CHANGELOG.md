@@ -6,6 +6,14 @@ latest tag matching `^v?[0-9]+(\.[0-9]+){0,3}$`.
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-11-07
+
+- A lease is a *node*: the module says so (`lease_noun`), and kiwi-proxy 0.7.2's
+  picker, editor and `module leases` call it that ("137 nodes to choose from",
+  "Node id, 0xcbb6…eb78 for example"). Older kiwi-proxy ignores the attribute.
+- The modules dialog shows the configured identity in full (`identity 0x…`) so it
+  can be copied; it was shortened to 0x88994e…af55.
+
 ## [0.5.1] - 2026-11-07
 
 ### Fixed

@@ -83,7 +83,7 @@ def test_configure_copies_the_keystore_and_keeps_the_passphrase_as_a_secret(
     assert len(copies) == 1 and copies[0].name.endswith("88994eb3a02f606bd134cca0cabac6e1ba51af55")
     assert copies[0].read_text() == KEYSTORE and oct(copies[0].stat().st_mode)[-3:] == "600"
     assert stored == {"passphrase": "s3cret\n"}, "a newline, so an empty one is still a secret"
-    assert provider.configured(ctx) == "identity 0x88994e…af55"
+    assert provider.configured(ctx) == "identity 0x88994eb3a02f606bd134cca0cabac6e1ba51af55"
     # Again: one copy of the identity, not two.
     provider.configure(ctx, {"keystore": str(wallet)})
     assert len(list((data / "keystore").iterdir())) == 1
