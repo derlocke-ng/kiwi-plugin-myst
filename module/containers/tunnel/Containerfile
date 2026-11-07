@@ -4,8 +4,19 @@
 # Built by `kiwi-proxy module setup mysterium` as kiwi-proxy/mysterium:latest.
 FROM docker.io/mysteriumnetwork/myst:latest
 
+# The entrypoint drives the node's local API: curl for PUT/DELETE (busybox wget
+# cannot), jq to read the answers.
+RUN apk add --no-cache curl jq
+
+# The official image runs the node as an unprivileged user and reaches for sudo
+# to set the tunnel interface and iptables up. kiwi-proxy runs this container as
+# container-root (the host user, under rootless podman) with NET_ADMIN only and
+# no-new-privileges, so sudo itself cannot work (it needs SETUID and to read
+# sudoers) and is not needed: it is replaced by a stand-in that runs the command.
+USER root
+COPY sudo /usr/bin/sudo
+
 COPY entrypoint.sh /usr/local/bin/kf-myst
-# busybox/wget is present in the base image; make the entrypoint executable.
-RUN chmod +x /usr/local/bin/kf-myst
+RUN chmod +x /usr/local/bin/kf-myst /usr/bin/sudo
 
 ENTRYPOINT ["/usr/local/bin/kf-myst"]

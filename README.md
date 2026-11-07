@@ -26,31 +26,39 @@ entrypoint that starts the node and brings a consumer connection up; the adapter
 
 ## Identity (once)
 
-The node's data directory — identity and keystore — lives in the module's state
-directory and is mounted into the node, so it persists:
+Mysterium needs a registered consumer identity: the keystore file it exported
+(`0x….json`) and its passphrase. Give them to the module once — in the Kiwi Proxy
+app under *Provider modules → Mysterium → Configure…* (a file chooser and a
+password field), or:
 
-```
-~/.local/share/kiwi-proxy/modules-state/mysterium/myst/
-    kf-consumer-id      a text file holding your registered consumer identity (0x…)
-    ...                 the node's keystore
+```sh
+kiwi-proxy module config mysterium keystore=/path/to/0x….json --ask passphrase
+kiwi-proxy module settings mysterium          # what it has
 ```
 
-Create and register a consumer identity with the Mysterium node, then write its
-address into `kf-consumer-id`. The tunnel entrypoint connects over the node's local
-API (tequilapi on `127.0.0.1:4050`); see `module/containers/tunnel/entrypoint.sh` —
-it is the one place to adjust for your myst version if the connect flow differs.
+The keystore is copied into the module's own data directory
+(`~/.local/share/kiwi-proxy/modules-state/mysterium/myst/keystore/`), which the node
+mounts; the passphrase is a podman secret the node reads at start, never an
+environment variable. The identity's registration and balance are read from the
+node when it starts and written to its log.
 
 ## Use
 
+Pick a country, then a provider in it — the exit editor lists them, best quality
+first, as the country field changes; so does the CLI:
+
 ```sh
-kiwi-proxy add work --module mysterium --lease 0x<provider-id>   # an exit: `kiwi-proxy up work`, --expose PORT for the host
-kiwi-fox new work --module mysterium --lease 0x<provider-id>   # a specific provider
-kiwi-fox new work --module mysterium                           # let the node pick
-kiwi-fox run work
+kiwi-proxy module leases mysterium --country DE            # providers in Germany, best first
+kiwi-proxy add myst-de --module mysterium --country de --lease 0x<provider-id>
+kiwi-proxy add myst-any-de --module mysterium --country de  # no lease: the node picks the best
+kiwi-proxy up myst-de && kiwi-proxy check myst-de
+kiwi-fox new work --exit myst-de                           # a browser identity on it
 ```
 
-`--lease` is a Mysterium **provider identity**; provider ids come from the discovery
-service at runtime, so none are hard-coded.
+A kiwi-fox profile is on one exit, so one provider; another provider is another
+exit (`kiwi-fox set work --exit myst-nl`). One identity holds one connection at a
+time: an exit on a second provider refuses to come up while an exit through the
+first is still up.
 
 ## How it fits
 
@@ -64,13 +72,22 @@ microsocks adapter  (SOCKS5 0.0.0.0:1080, rides the tunnel)
 The adapter is removed before the node on teardown. A shared node serves every
 exit on the same lease and is torn down once no running gateway still uses it.
 
+The node runs as container-root with `NET_ADMIN` only, under `no-new-privileges`
+and rootless podman's user namespace. Two things the official image assumes are
+not there: SELinux's container type may not open `/dev/net/tun`, so kiwi-proxy
+0.4 runs tunnel containers unlabelled (`label=disable`); and the node prefixes
+`ip`/`iptables` with sudo even as root, which cannot work with the caps dropped,
+so the image carries a stand-in sudo that just runs the command.
+
 ## Status
 
-The wiring, two-container lifecycle, and both images are complete and unit-tested
-against the kiwi-proxy contract. The consumer-connect step depends on your myst
-version and a registered, funded identity, so validate `module up mysterium` on your
-own machine; the entrypoint's tequilapi calls are the documented integration point
-to adjust if needed.
+Verified end to end on 2026-11-07 (Fedora, rootless podman, node image 1.39.9):
+the identity is unlocked and its registration and balance read, the node connects
+to the chosen provider, and a kiwi-proxy gateway exits through it — plain HTTP and
+TLS from a member, and `kiwi-proxy check`, see the provider's address. Connecting
+needs a registered identity with MYST on it; the entrypoint logs what it finds
+(`podman logs kf-prov-mysterium-<provider>`), and its tequilapi calls are the
+integration point to adjust when the node's API moves.
 
 ## Development
 

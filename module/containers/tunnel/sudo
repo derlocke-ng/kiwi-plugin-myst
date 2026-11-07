@@ -1,0 +1,14 @@
+#!/bin/sh
+# kiwi-proxy: stands in for sudo. The node runs as container-root here with
+# NET_ADMIN, so `ip` and `iptables` work as they are — but the node still prefixes
+# them with sudo, which would need SETUID/SETGID and a sudoers it may not read
+# (no-new-privileges, dropped caps). Leading sudo options are skipped.
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --) shift; break ;;
+        -u|-g|-C|-D|-h|-p|-r|-t|-T|-U) shift 2 ;;  # options with a value
+        -*) shift ;;
+        *) break ;;
+    esac
+done
+exec "$@"

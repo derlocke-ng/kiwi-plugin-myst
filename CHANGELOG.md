@@ -6,6 +6,53 @@ latest tag matching `^v?[0-9]+(\.[0-9]+){0,3}$`.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-07
+
+### Added
+- **Countries from discovery.** The module tells kiwi-proxy 0.4 where Mysterium
+  has providers and how many (`kiwi-proxy module countries mysterium`); the exit
+  editor offers them as a searchable list and asks for that country's providers.
+- **Identity import.** The module declares what it needs (kiwi-proxy 0.4's
+  settings): the keystore JSON Mysterium exported and its passphrase. The Kiwi
+  Proxy app asks with a file chooser and a password field; the CLI with
+  `kiwi-proxy module config mysterium keystore=… --ask passphrase`. The keystore
+  is copied into the module's data directory, the passphrase kept as a podman
+  secret the node reads at start.
+- **Providers by country.** `leases` queries Mysterium's discovery service —
+  `kiwi-proxy module leases mysterium --country DE`, and the exit editor as the
+  country changes — best quality first, sixty at most, with city, IP type,
+  quality and ISP.
+
+### Changed
+- **The connect flow is real.** The entrypoint drives the node's API with curl:
+  unlock, registration and balance (logged), the provider given or the best in
+  the country, `PUT /connection`, wait for Connected; every step logs a
+  `kf-myst:` line and a failure says why (`kf-myst: FATAL`), which kiwi-proxy
+  reports instead of a timeout.
+- One identity, one connection: a second provider while an exit still goes
+  through the first is refused; an idle node on another provider is replaced.
+
+### Fixed
+- kiwi-proxy's readiness check took the node's "connected to <provider>" line
+  for the final `kf-myst: connected` and started the gateway into a tunnel that
+  carried nothing yet; it now wants that exact line. A session that carries no
+  traffic within 75 s is dropped for a fresh one, once, before giving up.
+- "Connected" is reported a few seconds before the tunnel passes traffic; a gateway
+  measured in that window saw a TLS EOF. The entrypoint now says `connected` only
+  once a request through the tunnel to Mysterium's location oracle has answered,
+  and logs the exit it sees.
+- The node is started with `--script-dir=/etc/mysterium-node`, where the image
+  keeps `update-resolv-conf`; without it the node looks beside its binary and the
+  connection dies with "could not set DNS: … no such file or directory".
+- The node prefixes `ip` and `iptables` with sudo even as root, and sudo cannot
+  run under no-new-privileges with the caps dropped ("setresuid: Operation not
+  permitted"), so the tunnel interface never got its address. The image now
+  carries a stand-in sudo that runs the command; the node is root with NET_ADMIN.
+- The node reports its balance only after asking the hermes for it; the cached
+  value a fresh node holds is 0 whatever the identity has.
+- Under SELinux the node could not open `/dev/net/tun` ("failed to create TUN
+  device: permission denied"); kiwi-proxy 0.4.0 runs tunnel containers unlabelled.
+
 ## [0.2.3] - 2026-11-07
 
 ### Fixed
