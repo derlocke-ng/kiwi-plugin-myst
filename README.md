@@ -74,6 +74,10 @@ microsocks adapter  (SOCKS5 0.0.0.0:1080, rides the tunnel)
 The adapter is removed before the node on teardown. A shared node serves every
 exit on the same lease and is torn down once no running gateway still uses it.
 
+The tunnel's MTU is 1280 (`KF_MYST_MTU` in the node's environment to raise it):
+the node's default of 1420 is too large when the path is itself a tunnel — a host
+on Mullvad, say — and then DNS and small pages work while every TLS handshake hangs.
+
 The node runs as container-root with `NET_ADMIN` only, under `no-new-privileges`
 and rootless podman's user namespace. Two things the official image assumes are
 not there: SELinux's container type may not open `/dev/net/tun`, so kiwi-proxy

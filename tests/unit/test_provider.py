@@ -306,6 +306,7 @@ def test_the_entrypoint_drives_the_node_the_way_the_tests_assume():
     ).read_text()
     for needle in (
         "--script-dir=/etc/mysterium-node",  # update-resolv-conf lives there
+        "--wireguard.mtu=",  # 1280 by default: the tunnel may ride inside another tunnel
         "--tequilapi.address=127.0.0.1",
         "--tequilapi.port=4050",
         "/identities/$CONSUMER/unlock",
@@ -313,7 +314,10 @@ def test_the_entrypoint_drives_the_node_the_way_the_tests_assume():
         "api PUT /connection",
         "api GET /connection",
         'DELETE "$API/connection"',  # on TERM
-        "location.mysterium.network",  # traffic through the tunnel, before "connected"
+        "killswitch_on",  # the routing kill switch: blackhole 0/1 + 128/1
+        "blackhole 0.0.0.0/1",
+        "blackhole 128.0.0.0/1",
+        "ipinfo.io",  # a neutral echo proves traffic through the tunnel (not an allowlisted host)
         'log "connected"',
     ):
         assert needle in script, needle

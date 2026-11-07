@@ -6,6 +6,39 @@ latest tag matching `^v?[0-9]+(\.[0-9]+){0,3}$`.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-07
+
+### Fixed
+- **The IP leak.** When the WireGuard tunnel dropped, the node's traffic fell back
+  to its bridge/default route — which reaches the host — so a browser on the exit
+  silently left through the host's own connection (the user's Mullvad). The node
+  now installs a routing kill switch once connected: `blackhole 0.0.0.0/1` and
+  `128.0.0.0/1` at a worse metric than the tunnel's own routes, so while the tunnel
+  is up they are dormant and when it drops they drop consumer traffic instead of
+  leaking. Mysterium's infra keeps its per-host routes, so the node still
+  reconnects. (myst's own `kill_switch` cannot set up iptables in kiwi-proxy's
+  cap-dropped, no-new-privileges container, and does not block this fallback.)
+
+### Fixed (continued)
+- **TLS through the tunnel hung on many providers** — DNS and plain HTTP passed, a
+  TLS handshake never completed, bytes went out and little came back. The node's
+  default WireGuard MTU of 1420 is too large when the path is itself a tunnel (a
+  host on Mullvad, a container network behind one): large packets were dropped
+  silently. The node now runs with `--wireguard.mtu 1280` (`KF_MYST_MTU` to raise
+  it). Those "slow nodes" were this.
+
+### Changed
+- Readiness is proven with a neutral IP echo (ipinfo.io), not Mysterium's own
+  hosts: the node allowlists those to bypass the tunnel, so they answered even when
+  the tunnel carried nothing. With the kill switch on, a third party answers only
+  through the tunnel — real proof, and the exit IP it reports is logged.
+- Provider-by-country uses the node's `location_country` parameter. With no
+  provider pinned, the node tries the best few in the country in turn and keeps the
+  first that actually carries traffic, each on a short budget — some nodes advertise
+  well but connect slowly, so a slow one is dropped for another instead of waited
+  on. A provider the user pinned in the app is honoured with a generous budget and,
+  if it carries nothing, a clear failure naming it.
+
 ## [0.4.0] - 2026-11-07
 
 ### Changed

@@ -64,7 +64,7 @@ MANIFEST = ProviderManifest(
     name="mysterium",
     title="Mysterium",
     description="exit through the Mysterium dVPN",
-    version="0.4.0",
+    version="0.5.0",
     image=None,
     socks_port=SOCKS_PORT,
     auth="none",
@@ -99,7 +99,8 @@ def _fetch_json(url: str, timeout: float = 20) -> object:
 
 class MysteriumProvider(TunnelProvider):
     manifest = MANIFEST
-    ready_timeout = 300.0  # connect ≤150s, traffic proven ≤75s, once more if not
+    ready_timeout = 360.0  # entrypoint worst case: 4 providers × (connect ≤45s + traffic ≤25s)
+    log_marker = "kf-myst:"  # kiwi-proxy quotes these lines, not the node's debug noise
 
     # ------------------------------------------------------------------ identity
     def settings(self, ctx):
