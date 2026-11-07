@@ -6,6 +6,19 @@ latest tag matching `^v?[0-9]+(\.[0-9]+){0,3}$`.
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-07
+
+### Fixed
+- **A session that ends no longer leaves a dead exit.** Providers end sessions;
+  the node did not notice and sat NotConnected while the kill switch dropped
+  everything, so an exit looked up and refused every connection ("network
+  unreachable"). The node now watches its session and, when it ends, fails closed
+  and exits — it cannot reconnect itself: the kill switch blocks its own dial to a
+  provider, and lifting it would leak a browser's traffic meanwhile. kiwi-proxy
+  0.6.1 sees the provider gone and starts a fresh node and adapter behind the
+  same gateway (`gateway.heal`, from the app's poll and `kiwi-proxy reap`), which
+  connects anew; the exit is back within a minute, closed in between.
+
 ## [0.5.0] - 2026-11-07
 
 ### Fixed

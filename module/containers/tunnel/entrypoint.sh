@@ -201,4 +201,19 @@ else
 fi
 log "connected"
 
+# ------------------------------------------------------------------ watchdog
+# A session can end on the provider's side; the node does not reconnect by
+# itself and would sit NotConnected while the kill switch drops everything — an
+# exit that looks up and refuses every connection. Reconnecting from here is not
+# possible either: the kill switch blocks the node's own dial to a provider, and
+# lifting it would leak a browser's traffic to the host meanwhile. So this node
+# fails closed and exits; kiwi-proxy sees the provider gone and starts a fresh
+# node and adapter behind the same gateway (gateway.heal), which connects anew.
+while kill -0 "$NODE" 2>/dev/null; do
+    sleep 15
+    api GET /connection
+    state=$(jq -r '.status // "?"' /tmp/api.out)
+    [ "$state" = Connected ] && continue
+    die "the session ended (node says $state); the exit stays closed until kiwi-proxy restarts the provider"
+done
 wait "$NODE"
