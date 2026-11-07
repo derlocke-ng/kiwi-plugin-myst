@@ -1,0 +1,18 @@
+# images — both provider images build and run.
+#
+# 0.2.1 shipped a node image FROM a base that does not exist and an adapter image
+# whose `apk add microsocks` fails, and nothing noticed until a desktop built them:
+# the unit tests never touch a Containerfile. This builds both images from a clean
+# cache and runs each once (tests/smoke/images.sh), on every push and pull request.
+name: images
+on:
+  push:
+  pull_request:
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: for f in tests/smoke/images.sh module/containers/tunnel/entrypoint.sh; do bash -n "$f"; done
+      - run: bash tests/smoke/images.sh --no-cache
