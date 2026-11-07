@@ -140,7 +140,9 @@ def test_leases_come_from_discovery_best_first_for_a_country(module, provider, c
     assert [lease.id for lease in leases] == ["0xbest", "0xlow"]
     best = leases[0]
     assert (best.label, best.country, best.city) == ("Berlin · residential", "DE", "Berlin")
-    assert best.detail == "quality 2.9 · Telekom"
+    assert best.detail == "quality 2.9 · 20 ms"
+    assert (best.kind, best.quality, best.isp) == ("residential", 2.9, "Telekom")
+    assert best.short_id == "0xbest" and best.matches("telekom") and not best.matches("bonn")
     provider.leases(ctx)
     assert seen[-1].endswith("proposals?service_type=wireguard")
 
@@ -175,13 +177,23 @@ def test_countries_need_discovery(module, provider, ctx, monkeypatch):
         provider.countries(ctx)
 
 
-def test_leases_cap_at_the_best_sixty(module, provider, ctx, monkeypatch):
+def test_leases_are_every_provider_best_first(module, provider, ctx, monkeypatch):
+    # Not a best-sixty: the top of a country by quality is all hosting, and the
+    # picker is what narrows — by IP type, by a piece of an id, by city or ISP.
     many = {
-        "proposals": [{"provider_id": f"0x{i}", "quality": {"quality": i % 7}} for i in range(200)]
+        "proposals": [
+            {
+                "provider_id": f"0x{i}",
+                "quality": {"quality": i % 7},
+                "location": {"ip_type": "residential" if i % 2 else "hosting"},
+            }
+            for i in range(700)
+        ]
     }
     monkeypatch.setattr(module, "_fetch_json", lambda url, timeout=20: many)
     leases = provider.leases(ctx)
-    assert len(leases) == 60 and all(int(lease.id[2:]) % 7 == 6 for lease in leases[:28])
+    assert len(leases) == 700 and all(int(lease.id[2:]) % 7 == 6 for lease in leases[:100])
+    assert {lease.kind for lease in leases} == {"residential", "hosting"}
 
 
 def test_discovery_being_away_is_a_provider_error(module, provider, ctx, monkeypatch):

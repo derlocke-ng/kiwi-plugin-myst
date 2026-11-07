@@ -6,6 +6,18 @@ latest tag matching `^v?[0-9]+(\.[0-9]+){0,3}$`.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-07
+
+### Changed
+- **Every provider, with what the picker needs.** `leases` returns every provider
+  in the country (hundreds) instead of the best sixty by quality — which were all
+  hosting IPs — and fills kiwi-proxy 0.5's lease fields: `kind` (residential,
+  hosting, cellular, business, cdn), `quality` and `isp`, with latency and
+  bandwidth in the detail. The Kiwi Proxy app's picker filters by IP type,
+  searches any part of an id, a city or an ISP, and takes a typed id; a provider
+  can be changed on an existing exit. On kiwi-proxy 0.4 the extra fields are
+  left out.
+
 ## [0.3.0] - 2026-11-07
 
 ### Added

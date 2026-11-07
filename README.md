@@ -44,11 +44,13 @@ node when it starts and written to its log.
 
 ## Use
 
-Pick a country, then a provider in it — the exit editor lists them, best quality
-first, as the country field changes; so does the CLI:
+Pick a country, then a provider in it — the exit editor's picker lists every one,
+best quality first, with short id, city, IP type (residential, hosting, cellular,
+…), quality and ISP; filter by IP type, search any part of an id, a city or an
+ISP, or type an id to force one. The CLI does the same:
 
 ```sh
-kiwi-proxy module leases mysterium --country DE            # providers in Germany, best first
+kiwi-proxy module leases mysterium --country DE --kind residential --search cbb6   # providers in Germany, best first
 kiwi-proxy add myst-de --module mysterium --country de --lease 0x<provider-id>
 kiwi-proxy add myst-any-de --module mysterium --country de  # no lease: the node picks the best
 kiwi-proxy up myst-de && kiwi-proxy check myst-de

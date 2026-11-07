@@ -57,13 +57,14 @@ PASSPHRASE_SECRET = "passphrase"
 PASSPHRASE_TARGET = "/run/secrets/kf-myst-passphrase"
 ID_FILE = "kf-consumer-id"
 # A dropdown of hundreds of providers helps nobody: the best so many, by quality.
-MAX_LEASES = 60
+MAX_LEASES = 5000  # every provider in a country (hundreds); the picker filters and searches
+_LEASE_HAS_KIND = "kind" in getattr(Lease, "model_fields", {})
 
 MANIFEST = ProviderManifest(
     name="mysterium",
     title="Mysterium",
     description="exit through the Mysterium dVPN",
-    version="0.3.0",
+    version="0.4.0",
     image=None,
     socks_port=SOCKS_PORT,
     auth="none",
@@ -176,8 +177,10 @@ class MysteriumProvider(TunnelProvider):
         ]
 
     def leases(self, ctx, *, country=None):
-        """Providers from the discovery service, best first; one country's when
-        asked (every provider in a country is often hundreds)."""
+        """Providers from the discovery service, best first — every one of them,
+        with its IP type (residential, hosting, cellular, …), quality, latency,
+        bandwidth and ISP, so a picker can filter and search; one country's when
+        asked (hundreds per country)."""
         query = {"service_type": SERVICE_TYPE}
         if country:
             query["location_country"] = country.upper()
@@ -198,19 +201,27 @@ class MysteriumProvider(TunnelProvider):
                 continue
             loc = p.get("location") or {}
             q = p.get("quality") or {}
-            bits = [loc.get("city"), loc.get("ip_type")]
-            detail = f"quality {q.get('quality', '?')}"
-            if loc.get("isp"):
-                detail += f" · {loc['isp']}"
-            out.append(
-                Lease(
-                    id=pid,
-                    label=" · ".join(b for b in bits if b) or None,
-                    country=loc.get("country"),
-                    city=loc.get("city"),
-                    detail=detail,
-                )
+            kind = (loc.get("ip_type") or "").replace("content_delivery_network", "cdn") or None
+            quality = q.get("quality")
+            bits = [f"quality {quality:.1f}" if isinstance(quality, (int, float)) else None]
+            if isinstance(q.get("latency"), (int, float)):
+                bits.append(f"{q['latency']:.0f} ms")
+            if isinstance(q.get("bandwidth"), (int, float)):
+                bits.append(f"{q['bandwidth']:.0f} Mbit/s")
+            fields = dict(
+                id=pid,
+                label=" · ".join(b for b in (loc.get("city"), kind) if b) or None,
+                country=loc.get("country"),
+                city=loc.get("city"),
+                detail=" · ".join(b for b in bits if b) or None,
             )
+            if _LEASE_HAS_KIND:  # kiwi-proxy ≥ 0.5 filters and sorts a picker by these
+                fields.update(
+                    kind=kind,
+                    quality=float(quality) if isinstance(quality, (int, float)) else None,
+                    isp=loc.get("isp") or None,
+                )
+            out.append(Lease(**fields))
         return out
 
     # --------------------------------------------------------------------- node
