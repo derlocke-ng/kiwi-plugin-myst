@@ -339,3 +339,10 @@ def test_ready_is_the_final_line_whole_not_a_prefix(provider, ctx, monkeypatch):
         ),
     )
     assert provider.tunnel_ready(ctx, "c") is True
+
+
+def test_snapshots_leave_out_what_the_module_rebuilds():
+    """kiwi-proxy 0.8 reads this with getattr; older versions ignore it."""
+    from module.provider import PROVIDER
+
+    assert "myst/mainnet" in PROVIDER.snapshot_exclude

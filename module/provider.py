@@ -64,7 +64,7 @@ MANIFEST = ProviderManifest(
     name="mysterium",
     title="Mysterium",
     description="exit through the Mysterium dVPN",
-    version="0.5.2",
+    version="0.5.3",
     image=None,
     socks_port=SOCKS_PORT,
     auth="none",
@@ -102,6 +102,10 @@ class MysteriumProvider(TunnelProvider):
     lease_noun = "node"  # a lease is a Mysterium node: its id is an 0x… address
     ready_timeout = 360.0  # entrypoint worst case: 4 providers × (connect ≤45s + traffic ≤25s)
     log_marker = "kf-myst:"  # kiwi-proxy quotes these lines, not the node's debug noise
+    # Left out of kiwi-proxy's snapshots: the node's database, which the node writes
+    # while it runs (a copy taken then could be torn) and rebuilds when it is gone.
+    # The keystore, the identity and the passphrase are what travels.
+    snapshot_exclude = ("myst/mainnet",)
 
     # ------------------------------------------------------------------ identity
     def settings(self, ctx):

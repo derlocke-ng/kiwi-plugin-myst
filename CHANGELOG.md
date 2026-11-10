@@ -6,6 +6,13 @@ latest tag matching `^v?[0-9]+(\.[0-9]+){0,3}$`.
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-11-10
+
+- Snapshots (kiwi-proxy 0.8): the module's settings travel to another device with
+  `kiwi-proxy snapshot`, the keystore, the identity and its passphrase included.
+  The node's database (`myst/mainnet`) is left out: the node writes it while it
+  runs and rebuilds it when it is gone (`snapshot_exclude`).
+
 ## [0.5.2] - 2026-11-07
 
 - A lease is a *node*: the module says so (`lease_noun`), and kiwi-proxy 0.7.2's
