@@ -6,6 +6,11 @@ latest tag matching `^v?[0-9]+(\.[0-9]+){0,3}$`.
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-11-20
+
+- README: wallets are under Preferences → Modules → Wallets…, and an exit's
+  wallet is picked by name from the exit dialog's Wallet list (kiwi-proxy 0.27.2).
+
 ## [0.6.1] - 2026-11-20
 
 ### Fixed

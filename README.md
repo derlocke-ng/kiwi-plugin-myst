@@ -28,7 +28,7 @@ entrypoint that starts the node and brings a consumer connection up; the adapter
 
 A Mysterium exit pays from a **wallet**: a Mysterium identity with a balance in
 MYST. The module keeps several; in the Kiwi Proxy app they are under
-*Provider modules → Mysterium → Wallets…* (kiwi-proxy 0.27 or newer).
+*Preferences → Modules → Wallets…* (kiwi-proxy 0.27 or newer).
 
 ```sh
 kiwi-proxy module config mysterium keystore=/path/to/0x….json --ask passphrase name=main  # import one
@@ -69,7 +69,7 @@ kiwi-proxy up myst-de && kiwi-proxy check myst-de
 kiwi-fox new work --exit myst-de                           # a browser identity on it
 ```
 
-Pick the wallet with `--opt wallet=NAME` (in the app: *Wallet → Choose…*); an
+Pick the wallet with `--opt wallet=NAME` (in the app: the *Wallet* list); an
 exit without one uses the first wallet. A kiwi-fox profile is on one exit, so
 one provider; another provider is another exit (`kiwi-fox set work --exit
 myst-nl`). **One wallet holds one connection at a time**: Mysterium cancels a
