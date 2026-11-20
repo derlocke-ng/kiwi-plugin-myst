@@ -36,13 +36,16 @@ api() {  # method path [json-body] -> status in $CODE, body in /tmp/api.out (bod
 }
 body() { cat /tmp/api.out 2>/dev/null; }
 
-[ -s "$ID_FILE" ] || die "no identity: import your keystore first (kiwi-proxy module config mysterium keystore=…, or the app)"
-CONSUMER=$(tr -d ' \t\r\n' < "$ID_FILE")
+# KF_MYST_TASK: a short-lived node for one wallet task (task.sh: create, info,
+# register, sessions), started by the module, not an exit.
+TASK="${KF_MYST_TASK:-}"
+[ "$TASK" = create ] || [ -s "$ID_FILE" ] || die "no identity: import or create a wallet first (the app's Mysterium wallets, or kiwi-proxy module account mysterium new)"
+CONSUMER=$(tr -d ' \t\r\n' < "$ID_FILE" 2>/dev/null)
 PASS=""
 [ -f /run/secrets/kf-myst-passphrase ] && PASS=$(cat /run/secrets/kf-myst-passphrase)
 
 mkdir -p "$RUNDIR"
-log "starting the node (identity $CONSUMER)"
+[ -n "$TASK" ] || log "starting the node (identity $CONSUMER)"
 # --script-dir: the node sets the tunnel's DNS through update-resolv-conf, which
 # it looks for beside its binary (/usr/bin/config) unless told; the image has it
 # in /etc/mysterium-node.
@@ -72,6 +75,14 @@ until curl -sf "$API/healthcheck" >/dev/null 2>&1; do
     i=$((i + 1)); [ "$i" -ge 90 ] && die "the node's API did not come up in 90s"
     sleep 1
 done
+
+if [ -n "$TASK" ]; then
+    /usr/local/bin/kf-myst-task "$TASK"
+    rc=$?
+    kill "$NODE" 2>/dev/null
+    wait "$NODE" 2>/dev/null
+    exit "$rc"
+fi
 
 # ---------------------------------------------------------------- identity
 api PUT "/identities/$CONSUMER/unlock" "$(jq -cn --arg p "$PASS" '{passphrase:$p}')"
@@ -123,7 +134,17 @@ connect_to() {
     body=$(jq -cn --arg c "$CONSUMER" --arg p "$prov" --arg h "$HERMES" \
         '{consumer_id:$c, provider_id:$p, hermes_id:$h, service_type:"wireguard", connect_options:{kill_switch:false, dns:"auto"}}')
     api PUT /connection "$body"
-    case "$CODE" in 2*) ;; *) log "  $prov refused the connection (HTTP $CODE)"; return 1 ;; esac
+    case "$CODE" in
+        2*) ;;
+        *)
+            why=$(body | jq -r '.message // .error.message // empty' 2>/dev/null | head -c 160)
+            # The wallet's own state, not the provider's: no other provider helps.
+            case "$why" in
+                *"not registered"*) die "this wallet is not registered yet: send MYST on Polygon to its top-up address (Wallets…); it registers itself once the top-up arrives" ;;
+                *"insufficient balance"*) die "this wallet's balance is too low: top it up (Wallets… shows its top-up address)" ;;
+            esac
+            log "  $prov refused the connection (HTTP $CODE: $why)"; return 1 ;;
+    esac
     while :; do
         api GET /connection
         state=$(jq -r '.status // "?"' /tmp/api.out)

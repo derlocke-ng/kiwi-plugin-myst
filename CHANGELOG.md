@@ -6,6 +6,25 @@ latest tag matching `^v?[0-9]+(\.[0-9]+){0,3}$`.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-20
+
+- **Wallets.** The module keeps several Mysterium wallets, each with its own
+  data directory, passphrase secret and node. kiwi-proxy 0.27's *Wallets…*
+  (and `module accounts` / `module account`) lists them with their balance;
+  **Import** takes a keystore, **New** makes an identity and shows its top-up
+  address (Polygon only), which registers itself once the first top-up
+  arrives, as Mysterium's own app does. **History** shows the sessions paid
+  for, top-ups seen and bought, and registrations; **Export** copies the key
+  file; **Remove** moves the wallet aside, never deletes it.
+- **Each exit picks its wallet** (`--opt wallet=NAME`, *Wallet → Choose…*); an
+  exit without one uses the first. Exits on different wallets run side by side,
+  each with a node of its own. One wallet still holds one connection: tested on
+  2026-11-20, a second node on the same wallet gets "Connection cancelled" from
+  every provider until the first is gone.
+- The one identity of 0.5 becomes the first wallet, where it was (`myst/`).
+- A provider refusing a connection says why in the node's log.
+- The node image is rebuilt when the module changed (it has the wallet tasks).
+
 ## [0.5.3] - 2026-11-10
 
 - Snapshots (kiwi-proxy 0.8): the module's settings travel to another device with

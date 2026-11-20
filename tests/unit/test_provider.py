@@ -64,6 +64,7 @@ def test_settings_ask_for_the_keystore_and_a_passphrase(provider, ctx):
     assert [(s.key, s.kind, s.required) for s in provider.settings(ctx)] == [
         ("keystore", "file", True),
         ("passphrase", "password", False),
+        ("name", "text", False),
     ]
     assert provider.configured(ctx) is None
 
@@ -235,7 +236,7 @@ def test_up_refuses_a_second_provider_while_an_exit_uses_the_first(provider, ctx
     monkeypatch.setattr(
         TunnelProvider, "up", lambda self, ctx, *, lease=None, country=None: ("up", lease)
     )
-    with pytest.raises(ProviderError, match="one provider at a time"):
+    with pytest.raises(ProviderError, match="one connection per wallet"):
         provider.up(ctx, lease="0xb")
     assert provider.up(ctx, lease="0xa") == ("up", "0xa"), "the same provider is simply reused"
 

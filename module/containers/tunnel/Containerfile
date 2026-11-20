@@ -17,6 +17,7 @@ USER root
 COPY sudo /usr/bin/sudo
 
 COPY entrypoint.sh /usr/local/bin/kf-myst
-RUN chmod +x /usr/local/bin/kf-myst /usr/bin/sudo
+COPY task.sh /usr/local/bin/kf-myst-task
+RUN chmod +x /usr/local/bin/kf-myst /usr/local/bin/kf-myst-task /usr/bin/sudo
 
 ENTRYPOINT ["/usr/local/bin/kf-myst"]

@@ -24,23 +24,35 @@ Both images are built locally: the node image is `FROM mysteriumnetwork/myst` wi
 entrypoint that starts the node and brings a consumer connection up; the adapter is
 `alpine + microsocks`.
 
-## Identity (once)
+## Wallets
 
-Mysterium needs a registered consumer identity: the keystore file it exported
-(`0x….json`) and its passphrase. Give them to the module once — in the Kiwi Proxy
-app under *Provider modules → Mysterium → Configure…* (a file chooser and a
-password field), or:
+A Mysterium exit pays from a **wallet**: a Mysterium identity with a balance in
+MYST. The module keeps several; in the Kiwi Proxy app they are under
+*Provider modules → Mysterium → Wallets…* (kiwi-proxy 0.27 or newer).
 
 ```sh
-kiwi-proxy module config mysterium keystore=/path/to/0x….json --ask passphrase
-kiwi-proxy module settings mysterium          # what it has
+kiwi-proxy module config mysterium keystore=/path/to/0x….json --ask passphrase name=main  # import one
+kiwi-proxy module account mysterium new name=test1 --ask passphrase                       # make one
+kiwi-proxy module accounts mysterium --refresh                                            # balances
+kiwi-proxy module account mysterium show test1                                            # address, history
+kiwi-proxy module account mysterium export test1 ~/Backups                                # the key file
 ```
 
-The keystore is copied into the module's own data directory
-(`~/.local/share/kiwi-proxy/modules-state/mysterium/myst/keystore/`), which the node
-mounts; the passphrase is a podman secret the node reads at start, never an
-environment variable. The identity's registration and balance are read from the
-node when it starts and written to its log.
+- **New** makes the identity in a node of its own and shows its **top-up
+  address**: send MYST there **on Polygon only**. Once the first top-up arrives
+  the wallet registers itself (a small fee, once, from that top-up), as
+  Mysterium's own app does. Sending on another chain, or to the identity
+  address instead of the top-up address, is how coins get lost.
+- **Export** the key file of a wallet you fund: without it and its passphrase
+  the MYST in it is gone. **Remove** moves the wallet aside
+  (`modules-state/mysterium/removed/`), never deletes it.
+- **History**: the sessions it paid for, top-ups seen arriving, registrations,
+  and top-ups bought through Mysterium's payment gateways.
+
+Each wallet has its own data directory under
+`~/.local/share/kiwi-proxy/modules-state/mysterium/` (the first one in `myst/`,
+where 0.5 kept its one identity; the next in `wallets/0x…/`) and its passphrase
+as a podman secret, never an environment variable.
 
 ## Use
 
@@ -51,16 +63,19 @@ ISP, or type an id to force one. The CLI does the same:
 
 ```sh
 kiwi-proxy module leases mysterium --country DE --kind residential --search cbb6   # providers in Germany, best first
-kiwi-proxy add myst-de --module mysterium --country de --lease 0x<provider-id>
+kiwi-proxy add myst-de --module mysterium --country de --lease 0x<provider-id> --opt wallet=main
 kiwi-proxy add myst-any-de --module mysterium --country de  # no lease: the node picks the best
 kiwi-proxy up myst-de && kiwi-proxy check myst-de
 kiwi-fox new work --exit myst-de                           # a browser identity on it
 ```
 
-A kiwi-fox profile is on one exit, so one provider; another provider is another
-exit (`kiwi-fox set work --exit myst-nl`). One identity holds one connection at a
-time: an exit on a second provider refuses to come up while an exit through the
-first is still up.
+Pick the wallet with `--opt wallet=NAME` (in the app: *Wallet → Choose…*); an
+exit without one uses the first wallet. A kiwi-fox profile is on one exit, so
+one provider; another provider is another exit (`kiwi-fox set work --exit
+myst-nl`). **One wallet holds one connection at a time**: Mysterium cancels a
+second session of the same identity (tested 2026-11-20), so an exit on a second
+provider with the same wallet refuses to come up while the first is up. For
+exits side by side, give them different wallets.
 
 ## How it fits
 
