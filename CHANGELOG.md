@@ -6,6 +6,15 @@ latest tag matching `^v?[0-9]+(\.[0-9]+){0,3}$`.
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-20
+
+### Fixed
+- **Checking a wallet failed with "kf-prov-mysterium-task-… is already in use".**
+  The wallet page asks for a wallet's balance and its history at once, and both
+  started a node under the same name. A wallet's tasks now run one after the
+  other (a lock per wallet, for the app and the command line alike), and a task
+  container a crash left behind is removed first.
+
 ## [0.6.0] - 2026-11-20
 
 - **Wallets.** The module keeps several Mysterium wallets, each with its own

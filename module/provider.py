@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import contextlib
 import datetime as dt
+import fcntl
 import json
 import re
 import secrets as _random
@@ -93,7 +94,7 @@ MANIFEST = ProviderManifest(
     name="mysterium",
     title="Mysterium",
     description="exit through the Mysterium dVPN",
-    version="0.6.0",
+    version="0.6.1",
     image=None,
     socks_port=SOCKS_PORT,
     auth="none",
@@ -147,7 +148,13 @@ class MysteriumProvider(TunnelProvider):
     # Left out of kiwi-proxy's snapshots: the node's database, which the node writes
     # while it runs (a copy taken then could be torn) and rebuilds when it is gone.
     # The keystore, the identity and the passphrase are what travels.
-    snapshot_exclude = ("myst/mainnet", "wallets/*/mainnet*", "wallets/new-*", "removed/*/mainnet*")
+    snapshot_exclude = (
+        "myst/mainnet",
+        "wallets/*/mainnet*",
+        "wallets/new-*",
+        "removed/*/mainnet*",
+        ".locks",
+    )
 
     # ------------------------------------------------------------------ wallets
     account_noun = "wallet"
@@ -764,7 +771,17 @@ class MysteriumProvider(TunnelProvider):
 
     def _task(self, ctx, wallet: dict, task: str) -> dict:
         """Run task.sh for a wallet: in its node when one is up, else in a node
-        started for that alone (no tunnel: it only talks to Mysterium and Polygon)."""
+        started for that alone (no tunnel: it only talks to Mysterium and Polygon).
+        One task per wallet at a time — the app asks for a wallet's balance and
+        history together, the CLI may ask meanwhile, and two task nodes would
+        share a container name and the wallet's database."""
+        locks = ctx.state_dir / ".locks"
+        locks.mkdir(parents=True, exist_ok=True)
+        with (locks / f"{wallet['id']}.lock").open("w") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            return self._task_locked(ctx, wallet, task)
+
+    def _task_locked(self, ctx, wallet: dict, task: str) -> dict:
         from kiwi_proxy import podman
 
         running = self._node_of(ctx, wallet) if not wallet["id"].startswith("new-") else None
@@ -798,6 +815,7 @@ class MysteriumProvider(TunnelProvider):
             podman.network_ensure(
                 ctx.network, subnet=paths.PROVIDERS_SUBNET, gateway=paths.PROVIDERS_GATEWAY_IP
             )
+            podman.rm(name)  # one a crash left behind
             try:
                 podman.start(spec)
                 podman.wait(name, timeout=240)

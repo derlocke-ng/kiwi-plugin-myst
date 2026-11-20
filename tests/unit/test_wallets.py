@@ -206,3 +206,31 @@ def test_a_new_wallet_is_made_by_a_node_in_a_directory_of_its_own(two, ctx, secr
     assert secrets[f"wallet-{new[2:12]}"] == "pw\n"
     assert removed and removed[0].endswith(next(k for k in secrets if k.startswith("wallet-new-")))
     assert [w["name"] for w in two._wallets(ctx)] == ["Wallet 1", "Spare", "Test 1"]
+
+
+def test_one_task_per_wallet_at_a_time(two, ctx, monkeypatch):
+    """The wallet page asks for balance and history at once: the second waits
+    for the first instead of clashing on the task container's name."""
+    import threading
+    import time
+
+    running, overlaps = [], []
+
+    def locked(self, ctx, wallet, task):
+        if running:
+            overlaps.append(task)
+        running.append(task)
+        time.sleep(0.2)
+        running.pop()
+        return {"task": task}
+
+    monkeypatch.setattr(type(two), "_task_locked", locked)
+    wallet = two._wallets(ctx)[0]
+    threads = [
+        threading.Thread(target=two._task, args=(ctx, wallet, t)) for t in ("info", "history")
+    ]
+    for th in threads:
+        th.start()
+    for th in threads:
+        th.join()
+    assert overlaps == []
